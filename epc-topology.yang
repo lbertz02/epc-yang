@@ -1,0 +1,442 @@
+module epc-topology {
+ yang-version 1.1;
+
+ namespace
+ "urn:cord:params:xml:ns:yang:epc-topology";
+
+ prefix "epc-topo";
+
+
+ organization "M-CORD C3PO Project";
+
+ contact
+ "Editor: Lyle Bertz
+ <mailto:lylebe551144@gmail.com>";
+
+ description
+ "This module contains a collection of YANG definitions for
+ EPC topology based upon TS 28.708 and use cases from M-CORD.
+
+NOTE - This does NOT implement MBMS GW or full eNodeB objects.";
+
+  revision 2018-05-21 {
+    description
+     "Initial Revision.";
+    reference
+     "3GPP TS 28.708";
+  }
+
+grouping id-definition {
+    leaf id {
+        type string;
+    }
+    description "Common identifier";
+}
+grouping dn-prefix-definition {
+    leaf dn-prefix {
+        type string;
+        description "Distinguished Name prefix. The attribute dnPrefix shall be supported if an instance of the entity is the local root instance of the managed tree. Otherwise the attribute shall be absent or carry no information.";
+    }
+    description "Common DN attribute.";
+}
+grouping user-label-definition {
+    leaf user-label {
+        type string;
+        description "User Label";
+    }
+    description "User Label definition";
+}
+grouping user-defined-state-definition {
+    leaf user-defined-state {
+        type string;
+        description "User defined state";
+    }
+    description "User defined state definition";
+}
+grouping vendor-name-definition {
+    leaf vendor-name {
+        type string;
+        description "Vendor Name";
+    }
+    description "Vendor Name definition";
+}
+grouping location-name-definition {
+    leaf location-name {
+        type string;
+        description "Location Name";
+    }
+    description "Location Definition.";
+}
+grouping software-version-definition {
+    leaf sw-version {
+        type string;
+        description "Software version";
+    }
+    description "Software Version definition.";
+}
+
+grouping managed-element-context {
+    uses epc-topo:id-definition;
+    uses epc-topo:dn-prefix-definition;
+    description "Managed Element Context";
+}
+
+grouping management-node {
+    uses epc-topo:id-definition;
+    uses epc-topo:user-label-definition;
+    uses epc-topo:location-name-definition;
+    uses epc-topo:vendor-name-definition;
+    uses epc-topo:user-defined-state-definition;
+    list managed-elements {
+        key "id dn-prefix";
+        uses epc-topo:managed-element-context;
+        description "List of entities that manage this element";
+    }
+    uses epc-topo:software-version-definition;
+    description "Management Node";
+}
+
+grouping managed-function {
+    uses epc-topo:id-definition;
+    uses epc-topo:user-label-definition;
+    description "Managed Function";
+}
+
+grouping vs-container {
+    uses epc-topo:id-definition;
+    anydata vs-data {
+        description "vs data";
+    }
+    leaf vs-dataformat-version {
+        type string;
+        description "VS data format version";
+    }
+    description "VS Container";
+}
+
+grouping avp-definition {
+    leaf name {
+        type string;
+        description "Parameter name";
+    }
+    leaf value {
+        type string;
+        description "Parameter value";
+    }
+    description "Attribute Value Pair";
+}
+
+grouping managed-function-definition {
+    uses epc-topo:id-definition;
+    uses epc-topo:user-label-definition;
+    list pee-parameters {
+        key name;
+        uses epc-topo:avp-definition;
+        description "Power, Energy and Environmental
+        parameters list.";
+    }
+    list vnf-parameters {
+        key name;
+        uses epc-topo:avp-definition;
+        description "VNF parameters list.";
+    }
+    list vendor-specific-data {
+        key id;
+        uses epc-topo:vs-container;
+        description "Vendor Specfic Data";
+    }
+    description "Managed Function.";
+}
+
+grouping link {
+    uses epc-topo:id-definition;
+    uses epc-topo:user-label-definition;
+    container aEnd {
+        uses epc-topo:managed-element-context;
+        description "A end of link";
+    }
+    container zEnd {
+        uses epc-topo:managed-element-context;
+        description "Z end of link";
+    }
+    leaf link-type {
+        type enumeration {
+            enum signaling;
+            enum bearer;
+            enum oam_and_p;
+            enum other;
+        }
+        description "Link Type";
+    }
+    leaf protocol-name {
+        type string;
+        description "Protocol Name";
+    }
+    leaf protocol-version {
+        type string;
+        description "Protocol Version";
+    }
+    description "Link definition";
+}
+
+grouping ep-rp {
+    uses epc-topo:link;
+    container farEndEntity {
+        uses epc-topo:managed-element-context;
+        description "Far End Entity";
+    }
+    description "Endpoint Reference Point.";
+}
+
+grouping ep-rp-eps {
+    uses epc-topo:ep-rp;
+    leaf far-end-ne-ip-addr {
+        type string;
+        description "far end NE's IP address.";
+    }
+    description "EPS EP-RP";
+}
+
+grouping plmn-id-list {
+    list plmn-id-list {
+        key "mcc mnc";
+        leaf mcc {
+            type uint8;
+            description "MCC";
+        }
+        leaf mnc {
+            type uint8;
+            description "MNC";
+        }
+        description "PLMN Id";
+    }
+}
+
+grouping mme-function-base {
+    uses epc-topo:managed-function-definition;
+    uses epc-topo:plmn-id-list;
+    leaf mmec {
+        type uint32;
+        description "MMEC";
+    }
+    list mme-pool {
+        key id;
+        uses epc-topo:managed-element-context;
+        description "MME Pool";
+    }
+    description "MME Function Base Structure";
+}
+
+grouping serving-gw-function-base {
+    uses epc-topo:managed-function-definition;
+    uses epc-topo:plmn-id-list;
+    leaf-list tac-list {
+        type uint32;
+        description "TAC";
+    }
+    description "Serving GW Function Base";
+}
+
+list subnetwork {
+    key id;
+    uses epc-topo:id-definition;
+    leaf-list dn-prefixes {
+        type string;
+        description "List of dn-prefixes";
+    }
+    uses epc-topo:user-label-definition;
+    leaf user-defined-network-type {
+        type string {
+            length 3;
+        }
+        description "User Defined Network Type";
+    }
+    leaf-list set-of-mcc {
+        type string;
+        description "Set of MCC values";
+    }
+    list sub-neteworks {
+        key id;
+        uses epc-topo:managed-element-context;
+        description "Contained Sub-networks";
+    }
+    container qci-set {
+        uses epc-topo:managed-function-definition;
+        leaf-list qci-set {
+            type uint8;
+            description "QCI Set";
+        }
+        description "QCI Set";
+    }
+    list external-mmes {
+        key id;
+        uses epc-topo:mme-function-base;
+        description "External MME List";
+    }
+    list external-sgws {
+        key id;
+        uses epc-topo:serving-gw-function-base;
+        description "External SGW List";
+    }
+    list managed-elements {
+        key id;
+        uses epc-topo:id-definition;
+        uses epc-topo:dn-prefix-definition;
+        uses epc-topo:user-label-definition;
+        uses epc-topo:location-name-definition;
+        uses epc-topo:vendor-name-definition;
+        uses epc-topo:user-defined-state-definition;
+        leaf-list managed-element-type {
+            type string;
+            description "Managed Element Type information.";
+        }
+        leaf-list managed-by {
+            type string;
+            description "List of entities that manage this element";
+        }
+        uses epc-topo:software-version-definition;
+        list epdg-list {
+            key id;
+            uses epc-topo:managed-function-definition;
+            list link-epdg-pgw {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                description "edpg - pgw link - S2b";
+            }
+            list link-epdg-pcrf {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                description "edpg - pcrf link - Gxb";
+            }
+            description "EPDGs";
+        }
+        list hss-list {
+            key id;
+            uses epc-topo:managed-function-definition;
+            list link-hss-sgw {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                description "hss - sgw link - S6a";
+            }
+            description "HSSs";
+        }
+        list pgw-list {
+            key id;
+            uses epc-topo:managed-function-definition;
+            list link-pgw-epdg {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                description "pgw - epdg link - S2b";
+            }
+            list link-pgw-pcrf {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                description "pgw- pcrf link - Gx";
+            }
+            list link-pgw-sgw {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                description "pgw- sgw link - s5";
+            }
+            description "PGWs";
+        }
+        list sgw-list {
+            key id;
+            uses epc-topo:serving-gw-function-base;
+            list link-sgw-mme {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                description "sgw - mme link - S11";
+            }
+            list link-sgw-pcrf {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                description "pgw- pcrf link - Gxc";
+            }
+            list link-sgw-pgw {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                description "sgw - pgw link - s5";
+            }
+            list link-sgw-enodeb {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                leaf eNBId {
+                    type uint32;
+                    description "eNodeB Id";
+                }
+                description "sgw - enodeB link - s1u";
+            }
+            description "PGWs";
+        }
+        list mme-list {
+            key id;
+            uses epc-topo:mme-function-base;
+            list link-mme-sgw {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                description "mme - sgw link - S11";
+            }
+            list link-mme-hss {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                description "mme - hss link - S6a";
+            }
+            list link-mme-mme {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                description "mme - mme link - S10";
+            }
+            list link-mme-enodeb {
+                key id;
+                uses epc-topo:ep-rp-eps;
+                leaf eNBId {
+                    type uint32;
+                    description "eNodeB Id";
+                }
+                description "mme - enodeB link - s1-mme";
+            }
+            description "PGWs";
+        }
+        description "Managed Elements";
+        reference "TS 28.622";
+    }
+    list mme-pool-areas {
+        key id;
+        uses epc-topo:managed-function-definition;
+        list mme-pool-area {
+            key id;
+            uses epc-topo:managed-element-context;
+            description "MME Pool";
+        }
+        leaf-list tac-list {
+            type uint32;
+            description "TAC";
+        }
+        uses epc-topo:plmn-id-list;
+
+        description "MME Pool Area";
+    }
+    list mme-pools {
+        key id;
+        uses epc-topo:managed-function-definition;
+        leaf mmegi {
+            type uint32;
+            description "MMEGI";
+        }
+        list mme-pool-members {
+            key id;
+            uses epc-topo:managed-element-context;
+            description "MME Pool Members";
+        }
+        list mme-pool-area {
+            key id;
+            uses epc-topo:managed-element-context;
+            description "MME Pool Area";
+        }
+        description "MME Pool";
+    }
+    description "Sub-network";
+}
+
+}
